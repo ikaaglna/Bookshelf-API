@@ -58,22 +58,29 @@ const addBookHandler = (request, h) => {
 
 };
 
-const getAllBooksHandler = () => {
-  const data = books.map(book => {
-    return {
-      id: book.id,
-      name: book.name,
-      publisher: book.publisher,
-    };
-  });
+// const getAllBooksHandler = () => {
+//   const data = books.map(book => {
+//     return {
+//       id: book.id,
+//       name: book.name,
+//       publisher: book.publisher,
+//     };
+//   });
 
-  return {
-    status: 'success',
-    data: {
-      books: data,
-    },
-  };
-};
+//   return {
+//     status: 'success',
+//     data: {
+//       books: data,
+//     },
+//   };
+// };
+
+const getAllBooksHandler = () => ({
+  status: 'success',
+  data: {
+    books: books.map(({ id, name,publisher }) => ({ id, name,publisher })),
+  },
+});
 
 const getBookByIdHandler = (request, h) => {
   const { id } = request.params;
@@ -90,7 +97,7 @@ const getBookByIdHandler = (request, h) => {
   }
   const response = h.response({
     status: 'fail',
-    message: 'Buku tidak ditemukan',
+    message: 'Gagal memperbarui buku. Buku tidak ditemukan',
   });
   response.code(404);
   return response;
@@ -101,6 +108,27 @@ const editBookByIdHandler = (request, h) => {
   const { id } = request.params;
 
   const { name, year, author, summary, publisher, pageCount, readPage, reading } = request.payload;
+
+  // Validasi
+  if (name === '') {
+    const response = h.response({
+      status: 'fail',
+      message: 'Gagal menambahkan buku. Mohon isi nama buku.',
+    });
+    response.code(400);
+    response.header('Access-Control-Allow-Origin', '*');
+    return response;
+  }
+
+  if(readPage > pageCount) {
+    const response = h.response({
+      status: 'fail',
+      message: 'Gagal menambahkan buku. readPage tidak boleh lebih besar dari pageCount',
+    });
+    response.code(400);
+    return response;
+  }
+
   const updatedAt = new Date().toISOString();
 
   const index = books.findIndex((book) => book.id === id);
